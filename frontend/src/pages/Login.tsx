@@ -34,9 +34,10 @@ export default function Login() {
       } else {
         toast.error(response.error || 'Đăng nhập thất bại')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error)
-      toast.error(error.response?.data?.error || 'Đăng nhập thất bại')
+      const errorMessage = error instanceof Error && 'response' in error && typeof error.response === 'object' && error.response !== null && 'data' in error.response && typeof error.response.data === 'object' && error.response.data !== null && 'error' in error.response.data && typeof error.response.data.error === 'string' ? error.response.data.error : 'Đăng nhập thất bại'
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }

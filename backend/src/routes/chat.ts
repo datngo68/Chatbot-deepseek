@@ -75,9 +75,13 @@ router.post('/send', authenticateToken, validateChatRequest, async (req, res, ne
         const assistantMessageId = uuidv4();
         let assistantContent = '';
 
-        while (true) {
+        let reading = true;
+        while (reading) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            reading = false;
+            break;
+          }
 
           const chunk = decoder.decode(value);
           const lines = chunk.split('\n');

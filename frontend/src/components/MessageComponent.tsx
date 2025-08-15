@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Copy, Check, User, Bot } from 'lucide-react'
-import { Message } from '@/types'
+import { Message } from '../../../shared/types'
 import { formatRelativeTime } from '@/lib/utils'
 
 interface MessageComponentProps {
@@ -50,7 +50,7 @@ export default function MessageComponent({ message }: MessageComponentProps) {
               <div className="prose prose-sm dark:prose-invert max-w-none">
                 <ReactMarkdown
                   components={{
-                    code({ node, inline, className, children, ...props }) {
+                    code({ inline, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '')
                       const code = String(children).replace(/\n$/, '')
                       

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useTheme } from '@/components/ThemeProvider'
+// import { useState } from 'react'
+import { useTheme } from '@/hooks/useTheme'
 import { useAuthStore } from '@/stores/authStore'
 import { Settings as SettingsIcon, User, Shield, Palette } from 'lucide-react'
 

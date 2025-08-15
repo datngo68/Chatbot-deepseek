@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery } from 'react-query'
 import { Plus, Search, Trash2, Download } from 'lucide-react'
 import { sessionsAPI } from '@/services/api'

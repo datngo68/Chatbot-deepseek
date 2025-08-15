@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '@/stores/authStore'
-import { Message, ChatSession, User, ApiResponse } from '@/types'
+import { Message, ChatSession, User, ApiResponse } from '../../../shared/types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
@@ -69,7 +69,11 @@ export const chatAPI = {
     const response = await api.post<ApiResponse<{
       message: string
       sessionId: string
-      usage: any
+      usage: {
+        prompt_tokens?: number
+        completion_tokens?: number
+        total_tokens?: number
+      }
     }>>('/chat/send', {
       message,
       sessionId,

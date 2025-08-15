@@ -150,14 +150,14 @@ router.get('/me', async (req, res, next) => {
       });
     }
 
-    const jwt = require('jsonwebtoken');
+    import jwt from 'jsonwebtoken';
     const jwtSecret = process.env.JWT_SECRET;
     
     if (!jwtSecret) {
       throw new Error('JWT_SECRET not configured');
     }
 
-    const decoded = jwt.verify(token, jwtSecret) as any;
+    const decoded = jwt.verify(token, jwtSecret) as { userId: string };
     
     const user = await getQuery(
       'SELECT id, username, email, created_at FROM users WHERE id = ?',

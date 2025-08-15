@@ -8,12 +8,10 @@ import {
   X, 
   Sun, 
   Moon, 
-  Monitor,
-  Plus,
-  Search
+  Monitor
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
-import { useTheme } from './ThemeProvider'
+import { useTheme } from '@/hooks/useTheme'
 import { cn } from '@/lib/utils'
 import SessionList from './SessionList'
 
@@ -25,12 +23,6 @@ export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { logout, user } = useAuthStore()
   const { theme, setTheme } = useTheme()
-  const location = useLocation()
-
-  const navigation = [
-    { name: 'Chat', href: '/chat', icon: MessageSquare },
-    { name: 'Cài đặt', href: '/settings', icon: Settings },
-  ]
 
   const handleLogout = () => {
     logout()
