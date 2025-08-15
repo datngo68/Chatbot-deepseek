@@ -4,6 +4,8 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { runQuery, getQuery } from '../config/database';
 import { generateToken } from '../middleware/auth';
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 
@@ -20,7 +22,7 @@ const validateLogin = [
 ];
 
 // Register user
-router.post('/register', validateRegistration, async (req, res, next) => {
+router.post('/register', validateRegistration, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -83,7 +85,7 @@ router.post('/register', validateRegistration, async (req, res, next) => {
 });
 
 // Login user
-router.post('/login', validateLogin, async (req, res, next) => {
+router.post('/login', validateLogin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -138,7 +140,7 @@ router.post('/login', validateLogin, async (req, res, next) => {
 });
 
 // Get current user
-router.get('/me', async (req, res, next) => {
+router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -150,7 +152,6 @@ router.get('/me', async (req, res, next) => {
       });
     }
 
-    const jwt = require('jsonwebtoken');
     const jwtSecret = process.env.JWT_SECRET;
     
     if (!jwtSecret) {
@@ -182,14 +183,14 @@ router.get('/me', async (req, res, next) => {
         }
       }
     });
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({
         success: false,
         error: 'Invalid token'
       });
     }
-    next(error);
+    next(error as Error);
   }
 });
 

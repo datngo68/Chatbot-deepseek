@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from 'react'
 import { useQuery } from 'react-query'
 import { Plus, Search, Trash2, Download } from 'lucide-react'

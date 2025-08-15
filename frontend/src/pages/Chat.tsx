@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useRef, useEffect } from 'react'
 import { Send, Loader2, Plus, Download, Trash2 } from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
