@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { runQuery, getQuery } from '../config/database';
 import { generateToken } from '../middleware/auth';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 
@@ -66,7 +67,7 @@ router.post('/register', validateRegistration, async (req, res, next) => {
     // Generate token
     const token = generateToken(userId);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: {
         token,
@@ -78,7 +79,7 @@ router.post('/register', validateRegistration, async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -121,7 +122,7 @@ router.post('/login', validateLogin, async (req, res, next) => {
     // Generate token
     const token = generateToken(user.id);
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         token,
@@ -133,7 +134,7 @@ router.post('/login', validateLogin, async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -150,7 +151,6 @@ router.get('/me', async (req, res, next) => {
       });
     }
 
-    import jwt from 'jsonwebtoken';
     const jwtSecret = process.env.JWT_SECRET;
     
     if (!jwtSecret) {
@@ -171,7 +171,7 @@ router.get('/me', async (req, res, next) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         user: {
@@ -189,7 +189,7 @@ router.get('/me', async (req, res, next) => {
         error: 'Invalid token'
       });
     }
-    next(error);
+    return next(error);
   }
 });
 
