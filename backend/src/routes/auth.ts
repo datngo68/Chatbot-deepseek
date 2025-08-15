@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { runQuery, getQuery } from '../config/database';
 import { generateToken } from '../middleware/auth';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 
@@ -79,7 +80,7 @@ router.post('/register', validateRegistration, async (req: Request, res: Respons
       }
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -134,7 +135,7 @@ router.post('/login', validateLogin, async (req: Request, res: Response, next: N
       }
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -189,7 +190,7 @@ router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
         error: 'Invalid token'
       });
     }
-    next(error);
+    return next(error);
   }
 });
 
