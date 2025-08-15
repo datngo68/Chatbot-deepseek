@@ -62,7 +62,7 @@ router.post('/send', authenticateToken, validateChatRequest, async (req, res, ne
 
     if (stream) {
       // Handle streaming response
-      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
 
@@ -75,7 +75,8 @@ router.post('/send', authenticateToken, validateChatRequest, async (req, res, ne
         const assistantMessageId = uuidv4();
         let assistantContent = '';
 
-        while (true) {
+        let streamComplete = false;
+        while (!streamComplete) {
           const { done, value } = await reader.read();
           if (done) break;
 
@@ -86,12 +87,9 @@ router.post('/send', authenticateToken, validateChatRequest, async (req, res, ne
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
               if (data === '[DONE]') {
-                // Update the message with final content
-                await runQuery(
-                  'UPDATE messages SET content = ? WHERE id = ?',
-                  [assistantContent, assistantMessageId]
-                );
-                return res.end();
+                streamComplete = true;
+                res.write('data: [DONE]\n\n');
+                break;
               }
 
               try {
@@ -108,7 +106,6 @@ router.post('/send', authenticateToken, validateChatRequest, async (req, res, ne
           }
         }
 
-        // Save assistant message
         await runQuery(
           'INSERT INTO messages (id, session_id, content, role) VALUES (?, ?, ?, ?)',
           [assistantMessageId, currentSessionId, assistantContent, 'assistant']
