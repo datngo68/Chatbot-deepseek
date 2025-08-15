@@ -99,7 +99,7 @@ export class DeepSeekService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData: any = await response.json().catch(() => ({}));
         throw new Error(errorData.error?.message || `HTTP ${response.status}`);
       }
 

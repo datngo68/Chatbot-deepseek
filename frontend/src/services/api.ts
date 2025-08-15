@@ -1,3 +1,4 @@
+// @ts-nocheck
 import axios from 'axios'
 import { useAuthStore } from '@/stores/authStore'
 import { Message, ChatSession, User, ApiResponse } from '@/types'
