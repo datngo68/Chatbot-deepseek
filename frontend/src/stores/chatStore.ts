@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Message, ChatSession } from '@/types'
+import { Message, ChatSession } from '../../../shared/types'
 
 interface ChatState {
   sessions: ChatSession[]

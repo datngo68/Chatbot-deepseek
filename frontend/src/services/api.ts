@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '@/stores/authStore'
-import { Message, ChatSession, User, ApiResponse } from '@/types'
+import { Message, ChatSession, User, ApiResponse } from '../../../shared/types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
@@ -61,6 +61,21 @@ export const authAPI = {
     const response = await api.get<ApiResponse<{ user: User }>>('/auth/me')
     return response.data
   },
+
+  forgotPassword: async (email: string) => {
+    const response = await api.post<ApiResponse>('/auth/forgot-password', { email })
+    return response.data
+  },
+
+  resetPassword: async (token: string, password: string) => {
+    const response = await api.post<ApiResponse>('/auth/reset-password', { token, password })
+    return response.data
+  },
+
+  verifyResetToken: async (token: string) => {
+    const response = await api.get<ApiResponse>(`/auth/verify-reset-token/${token}`)
+    return response.data
+  },
 }
 
 // Chat API
@@ -69,7 +84,11 @@ export const chatAPI = {
     const response = await api.post<ApiResponse<{
       message: string
       sessionId: string
-      usage: any
+      usage: {
+        prompt_tokens?: number
+        completion_tokens?: number
+        total_tokens?: number
+      }
     }>>('/chat/send', {
       message,
       sessionId,
@@ -127,6 +146,93 @@ export const sessionsAPI = {
     const response = await api.get<ApiResponse<ChatSession[]>>(`/sessions/search/${query}`)
     return response.data
   },
+}
+
+// User Management API
+export const userAPI = {
+  getUsers: async (params?: { search?: string; role?: string; status?: string }) => {
+    const searchParams = new URLSearchParams()
+    if (params?.search) searchParams.append('search', params.search)
+    if (params?.role) searchParams.append('role', params.role)
+    if (params?.status) searchParams.append('status', params.status)
+    
+    const response = await api.get<ApiResponse<any[]>>(`/admin/users?${searchParams.toString()}`)
+    return response.data
+  },
+  
+  createUser: async (userData: { username: string; email: string; password: string; role: string }) => {
+    const response = await api.post<ApiResponse<User>>('/admin/users', userData)
+    return response.data
+  },
+  
+  updateUser: async (userId: string, updates: any) => {
+    const response = await api.put<ApiResponse<User>>(`/admin/users/${userId}`, updates)
+    return response.data
+  },
+  
+  deleteUser: async (userId: string) => {
+    const response = await api.delete<ApiResponse>(`/admin/users/${userId}`)
+    return response.data
+  },
+  
+  exportUsers: async (): Promise<Blob> => {
+    const response = await api.get('/admin/users/export', {
+      responseType: 'blob'
+    })
+    return response.data
+  }
+}
+
+// Knowledge Base API
+export const knowledgeAPI = {
+  getDocuments: async (params?: { search?: string; status?: string }) => {
+    const searchParams = new URLSearchParams()
+    if (params?.search) searchParams.append('search', params.search)
+    if (params?.status) searchParams.append('status', params.status)
+    
+    const response = await api.get<ApiResponse<any[]>>(`/knowledge/documents?${searchParams.toString()}`)
+    return response.data
+  },
+  
+  uploadDocuments: async (files: File[], onProgress?: (progress: number) => void) => {
+    const formData = new FormData()
+    files.forEach(file => formData.append('documents', file))
+    
+    const response = await api.post<ApiResponse<any>>('/knowledge/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          onProgress(progress)
+        }
+      }
+    })
+    return response.data
+  },
+  
+  deleteDocument: async (documentId: string) => {
+    const response = await api.delete<ApiResponse>(`/knowledge/documents/${documentId}`)
+    return response.data
+  },
+  
+  processDocument: async (documentId: string) => {
+    const response = await api.post<ApiResponse>(`/knowledge/documents/${documentId}/process`)
+    return response.data
+  },
+  
+  downloadDocument: async (documentId: string) => {
+    const response = await api.get(`/knowledge/documents/${documentId}/download`, {
+      responseType: 'blob'
+    })
+    const url = window.URL.createObjectURL(response.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'document'
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  }
 }
 
 export default api

@@ -9,11 +9,11 @@ import {
   Sun, 
   Moon, 
   Monitor,
-  Plus,
-  Search
+  Users,
+  BookOpen
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
-import { useTheme } from './ThemeProvider'
+import { useTheme } from '@/hooks/useTheme'
 import { cn } from '@/lib/utils'
 import SessionList from './SessionList'
 
@@ -25,12 +25,6 @@ export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { logout, user } = useAuthStore()
   const { theme, setTheme } = useTheme()
-  const location = useLocation()
-
-  const navigation = [
-    { name: 'Chat', href: '/chat', icon: MessageSquare },
-    { name: 'Cài đặt', href: '/settings', icon: Settings },
-  ]
 
   const handleLogout = () => {
     logout()
@@ -155,34 +149,62 @@ function SidebarContent() {
   const location = useLocation()
   const { user } = useAuthStore()
 
+  const navigation = [
+    { name: 'Chat', href: '/chat', icon: MessageSquare },
+    { name: 'Kho kiến thức', href: '/knowledge', icon: BookOpen },
+    { name: 'Cài đặt', href: '/settings', icon: Settings },
+  ]
+
+  const adminNavigation = [
+    { name: 'Quản lý người dùng', href: '/users', icon: Users },
+  ]
+
   return (
     <>
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-2 py-4">
-        <Link
-          to="/chat"
-          className={cn(
-            "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
-            location.pathname === '/chat'
-              ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
-              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
-          )}
-        >
-          <MessageSquare size={20} className="mr-3" />
-          Chat
-        </Link>
-        <Link
-          to="/settings"
-          className={cn(
-            "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
-            location.pathname === '/settings'
-              ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
-              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
-          )}
-        >
-          <Settings size={20} className="mr-3" />
-          Cài đặt
-        </Link>
+        {navigation.map((item) => (
+          <Link
+            key={item.name}
+            to={item.href}
+            className={cn(
+              "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
+              location.pathname === item.href
+                ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
+            )}
+          >
+            <item.icon size={20} className="mr-3" />
+            {item.name}
+          </Link>
+        ))}
+
+        {/* Admin navigation */}
+        {user?.role === 'admin' && (
+          <>
+            <div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+            <div className="px-2 py-1">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Quản trị
+              </p>
+            </div>
+            {adminNavigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={cn(
+                  "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
+                  location.pathname === item.href
+                    ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
+                )}
+              >
+                <item.icon size={20} className="mr-3" />
+                {item.name}
+              </Link>
+            ))}
+          </>
+        )}
       </nav>
 
       {/* Session list */}

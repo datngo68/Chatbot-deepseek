@@ -27,16 +27,17 @@ export default function Login() {
     try {
       const response = await authAPI.login(email, password)
       
-      if (response.success) {
+      if (response.success && response.data) {
         login(response.data.user, response.data.token)
         toast.success('Đăng nhập thành công!')
         navigate('/chat')
       } else {
         toast.error(response.error || 'Đăng nhập thất bại')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error)
-      toast.error(error.response?.data?.error || 'Đăng nhập thất bại')
+      const errorMessage = error instanceof Error && 'response' in error && typeof error.response === 'object' && error.response !== null && 'data' in error.response && typeof error.response.data === 'object' && error.response.data !== null && 'error' in error.response.data && typeof error.response.data.error === 'string' ? error.response.data.error : 'Đăng nhập thất bại'
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -121,6 +122,26 @@ export default function Login() {
             </button>
           </div>
         </form>
+
+        <div className="mt-6 text-center space-y-2">
+          <div>
+            <Link
+              to="/forgot-password"
+              className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Quên mật khẩu?
+            </Link>
+          </div>
+          <div>
+            <span className="text-gray-600 dark:text-gray-400">Chưa có tài khoản? </span>
+            <Link
+              to="/register"
+              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Đăng ký ngay
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )

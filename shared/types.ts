@@ -50,7 +50,11 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  role?: 'admin' | 'user';
+  status?: 'active' | 'inactive' | 'banned';
   createdAt: Date;
+  lastLogin?: Date;
+  loginCount?: number;
 }
 
 export interface ApiResponse<T = any> {

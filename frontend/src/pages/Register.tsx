@@ -40,16 +40,17 @@ export default function Register() {
     try {
       const response = await authAPI.register(username, email, password)
       
-      if (response.success) {
+      if (response.success && response.data) {
         login(response.data.user, response.data.token)
         toast.success('Đăng ký thành công!')
         navigate('/chat')
       } else {
         toast.error(response.error || 'Đăng ký thất bại')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Register error:', error)
-      toast.error(error.response?.data?.error || 'Đăng ký thất bại')
+      const errorMessage = error instanceof Error && 'response' in error && typeof error.response === 'object' && error.response !== null && 'data' in error.response && typeof error.response.data === 'object' && error.response.data !== null && 'error' in error.response.data && typeof error.response.data.error === 'string' ? error.response.data.error : 'Đăng ký thất bại'
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }

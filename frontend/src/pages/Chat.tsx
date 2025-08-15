@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from 'react'
 import { Send, Loader2, Plus, Download, Trash2 } from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
 import { chatAPI, sessionsAPI } from '@/services/api'
-import { Message } from '@/types'
+import { Message } from '../../../shared/types'
 import { formatRelativeTime, generateId } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import MessageComponent from '@/components/MessageComponent'
-import SessionList from '@/components/SessionList'
+// import SessionList from '@/components/SessionList'
 
 export default function Chat() {
   const [inputMessage, setInputMessage] = useState('')
@@ -16,10 +16,8 @@ export default function Chat() {
   const {
     messages,
     currentSession,
-    setMessages,
     addMessage,
     setCurrentSession,
-    setLoading,
     clearChat
   } = useChatStore()
 
@@ -53,7 +51,7 @@ export default function Chat() {
         false
       )
 
-      if (response.success) {
+      if (response.success && response.data) {
         const assistantMessage: Message = {
           id: generateId(),
           content: response.data.message,
@@ -68,15 +66,16 @@ export default function Chat() {
         if (!currentSession) {
           const sessionResponse = await sessionsAPI.getSession(response.data.sessionId)
           if (sessionResponse.success) {
-            setCurrentSession(sessionResponse.data)
+            setCurrentSession(sessionResponse.data || null)
           }
         }
       } else {
         toast.error(response.error || 'Gửi tin nhắn thất bại')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Send message error:', error)
-      toast.error(error.response?.data?.error || 'Gửi tin nhắn thất bại')
+      const errorMessage = error instanceof Error && 'response' in error && typeof error.response === 'object' && error.response !== null && 'data' in error.response && typeof error.response.data === 'object' && error.response.data !== null && 'error' in error.response.data && typeof error.response.data.error === 'string' ? error.response.data.error : 'Gửi tin nhắn thất bại'
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
