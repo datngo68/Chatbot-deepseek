@@ -1,6 +1,7 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { runQuery, getQuery } from '../config/database';
 import { generateToken } from '../middleware/auth';
@@ -20,7 +21,7 @@ const validateLogin = [
 ];
 
 // Register user
-router.post('/register', validateRegistration, async (req, res, next) => {
+router.post('/register', validateRegistration, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -66,7 +67,7 @@ router.post('/register', validateRegistration, async (req, res, next) => {
     // Generate token
     const token = generateToken(userId);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: {
         token,
@@ -83,7 +84,7 @@ router.post('/register', validateRegistration, async (req, res, next) => {
 });
 
 // Login user
-router.post('/login', validateLogin, async (req, res, next) => {
+router.post('/login', validateLogin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -121,7 +122,7 @@ router.post('/login', validateLogin, async (req, res, next) => {
     // Generate token
     const token = generateToken(user.id);
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         token,
@@ -138,7 +139,7 @@ router.post('/login', validateLogin, async (req, res, next) => {
 });
 
 // Get current user
-router.get('/me', async (req, res, next) => {
+router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -150,7 +151,6 @@ router.get('/me', async (req, res, next) => {
       });
     }
 
-    import jwt from 'jsonwebtoken';
     const jwtSecret = process.env.JWT_SECRET;
     
     if (!jwtSecret) {
@@ -171,7 +171,7 @@ router.get('/me', async (req, res, next) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         user: {
