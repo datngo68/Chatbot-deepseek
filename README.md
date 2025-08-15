@@ -9,6 +9,7 @@ Một ứng dụng web chatbot hiện đại được xây dựng với DeepSeek
 - 📱 Responsive design cho mọi thiết bị
 - 💾 Lưu trữ lịch sử chat
 - 📁 Quản lý nhiều phiên chat
+- 🧹 Xóa tất cả tin nhắn trong một phiên
 - 📤 Export chat history
 - 🔍 Tìm kiếm trong lịch sử
 - ⚡ Tối ưu hiệu suất

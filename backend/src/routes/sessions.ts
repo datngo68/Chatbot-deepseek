@@ -175,6 +175,44 @@ router.delete('/:sessionId', authenticateToken, async (req, res, next) => {
   }
 });
 
+// Clear all messages in a session without deleting the session
+router.delete('/:sessionId/messages', authenticateToken, async (req, res, next) => {
+  try {
+    const { sessionId } = req.params;
+    const userId = (req as any).user.id;
+
+    // Verify session belongs to user
+    const session = await getQuery(
+      'SELECT id FROM chat_sessions WHERE id = ? AND user_id = ?',
+      [sessionId, userId]
+    );
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        error: 'Session not found'
+      });
+    }
+
+    // Delete all messages for the session
+    const result = await runQuery('DELETE FROM messages WHERE session_id = ?', [sessionId]);
+
+    // Reset message count and update timestamp
+    await runQuery(
+      'UPDATE chat_sessions SET message_count = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [sessionId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Session messages cleared successfully',
+      deleted: result.changes
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Export session as JSON
 router.get('/:sessionId/export', authenticateToken, async (req, res, next) => {
   try {
