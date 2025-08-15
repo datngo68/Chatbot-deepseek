@@ -27,7 +27,7 @@ export default function Login() {
     try {
       const response = await authAPI.login(email, password)
       
-      if (response.success) {
+      if (response.success && response.data) {
         login(response.data.user, response.data.token)
         toast.success('Đăng nhập thành công!')
         navigate('/chat')
@@ -122,6 +122,26 @@ export default function Login() {
             </button>
           </div>
         </form>
+
+        <div className="mt-6 text-center space-y-2">
+          <div>
+            <Link
+              to="/forgot-password"
+              className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Quên mật khẩu?
+            </Link>
+          </div>
+          <div>
+            <span className="text-gray-600 dark:text-gray-400">Chưa có tài khoản? </span>
+            <Link
+              to="/register"
+              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Đăng ký ngay
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )

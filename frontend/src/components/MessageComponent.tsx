@@ -50,11 +50,11 @@ export default function MessageComponent({ message }: MessageComponentProps) {
               <div className="prose prose-sm dark:prose-invert max-w-none">
                 <ReactMarkdown
                   components={{
-                    code({ inline, className, children, ...props }) {
+                    code({ className, children, ...props }: any) {
                       const match = /language-(\w+)/.exec(className || '')
                       const code = String(children).replace(/\n$/, '')
                       
-                      if (!inline && match) {
+                      if (!props.inline && match) {
                         return (
                           <div className="relative">
                             <button
@@ -64,7 +64,7 @@ export default function MessageComponent({ message }: MessageComponentProps) {
                               {copied ? <Check size={14} /> : <Copy size={14} />}
                             </button>
                             <SyntaxHighlighter
-                              style={tomorrow}
+                              style={tomorrow as any}
                               language={match[1]}
                               PreTag="div"
                               className="rounded-md"

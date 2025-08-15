@@ -40,7 +40,7 @@ export default function Register() {
     try {
       const response = await authAPI.register(username, email, password)
       
-      if (response.success) {
+      if (response.success && response.data) {
         login(response.data.user, response.data.token)
         toast.success('Đăng ký thành công!')
         navigate('/chat')

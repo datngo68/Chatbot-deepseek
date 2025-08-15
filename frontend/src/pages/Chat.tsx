@@ -51,7 +51,7 @@ export default function Chat() {
         false
       )
 
-      if (response.success) {
+      if (response.success && response.data) {
         const assistantMessage: Message = {
           id: generateId(),
           content: response.data.message,
@@ -66,7 +66,7 @@ export default function Chat() {
         if (!currentSession) {
           const sessionResponse = await sessionsAPI.getSession(response.data.sessionId)
           if (sessionResponse.success) {
-            setCurrentSession(sessionResponse.data)
+            setCurrentSession(sessionResponse.data || null)
           }
         }
       } else {

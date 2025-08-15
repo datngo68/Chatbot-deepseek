@@ -44,7 +44,7 @@ export default function SessionList() {
     try {
       const messagesResponse = await sessionsAPI.getSession(sessionId)
       if (messagesResponse.success) {
-        setCurrentSession(messagesResponse.data)
+        setCurrentSession(messagesResponse.data || null)
         
         // Load messages for this session
         const messagesResponse2 = await sessionsAPI.getSession(sessionId)
@@ -140,7 +140,7 @@ export default function SessionList() {
           </div>
         ) : (
           <div className="space-y-1 p-2">
-            {sessions.map((session) => (
+            {sessions.map((session: any) => (
               <div
                 key={session.id}
                 onClick={() => handleSelectSession(session.id)}

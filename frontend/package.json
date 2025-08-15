@@ -11,12 +11,15 @@
     "lint:fix": "eslint src --ext ts,tsx --fix"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/react-dropzone": "^4.2.2",
     "axios": "^1.6.2",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
     "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-dropzone": "^14.3.8",
     "react-hot-toast": "^2.4.1",
     "react-markdown": "^9.0.1",
     "react-query": "^3.39.3",
