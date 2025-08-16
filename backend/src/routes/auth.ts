@@ -20,16 +20,17 @@ const validateLogin = [
   body('password').notEmpty()
 ];
 
-// Register user
+// POST /register
 router.post('/register', validateRegistration, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Validation failed',
         details: errors.array()
       });
+      return;
     }
 
     const { username, email, password } = req.body;
@@ -41,10 +42,11 @@ router.post('/register', validateRegistration, async (req: Request, res: Respons
     );
 
     if (existingUser) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'User already exists'
       });
+      return;
     }
 
     // Hash password
@@ -67,7 +69,7 @@ router.post('/register', validateRegistration, async (req: Request, res: Respons
     // Generate token
     const token = generateToken(userId);
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       data: {
         token,
@@ -78,21 +80,24 @@ router.post('/register', validateRegistration, async (req: Request, res: Respons
         }
       }
     });
-  } catch (error) {
-    next(error);
+    return;
+  } catch (err) {
+    next(err);
+    return;
   }
 });
 
-// Login user
+// POST /login
 router.post('/login', validateLogin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Validation failed',
         details: errors.array()
       });
+      return;
     }
 
     const { email, password } = req.body;
@@ -104,51 +109,57 @@ router.post('/login', validateLogin, async (req: Request, res: Response, next: N
     );
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Invalid credentials'
       });
+      return;
     }
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Invalid credentials'
       });
+      return;
     }
+
+
 
     // Generate token
     const token = generateToken(user.id);
 
-    return res.json({
+    res.json({
       success: true,
       data: {
         token,
         user: {
-          id: user.id,
           username: user.username,
           email: user.email
         }
       }
     });
-  } catch (error) {
-    next(error);
+    return;
+  } catch (err) {
+    next(err);
+    return;
   }
 });
 
-// Get current user
+// GET /me
 router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Access token required'
       });
+      return;
     }
 
     const jwtSecret = process.env.JWT_SECRET;
@@ -165,13 +176,14 @@ router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
     );
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'User not found'
       });
+      return;
     }
 
-    return res.json({
+    res.json({
       success: true,
       data: {
         user: {
@@ -182,14 +194,17 @@ router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
         }
       }
     });
-  } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      return res.status(401).json({
+    return;
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({
         success: false,
         error: 'Invalid token'
       });
+      return;
     }
-    next(error);
+    next(err);
+    return;
   }
 });
 

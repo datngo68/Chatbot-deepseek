@@ -6,15 +6,23 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 
+// Load environment variables FIRST, before any other imports
+dotenv.config();
+
+// Debug: Kiểm tra biến môi trường
+console.log('Environment variables:');
+console.log('DEEPSEEK_API_KEY:', process.env.DEEPSEEK_API_KEY ? 'SET' : 'NOT SET');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('Current working directory:', process.cwd());
+console.log('Env file path:', require('path').resolve('.env'));
+
+// Import routes AFTER dotenv.config()
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
 import { authRoutes } from './routes/auth';
 import { chatRoutes } from './routes/chat';
 import { sessionRoutes } from './routes/sessions';
 import { initializeDatabase } from './config/database';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

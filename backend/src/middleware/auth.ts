@@ -53,6 +53,7 @@ export const authenticateToken = async (
     };
 
     next();
+    return;
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({

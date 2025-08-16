@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
 import { v4 as uuidv4 } from 'uuid';
 import { deepSeekService } from '../services/deepseekService';
@@ -14,19 +14,25 @@ const validateChatRequest = [
   body('stream').optional().isBoolean()
 ];
 
-// Send message to DeepSeek
-router.post('/send', authenticateToken, validateChatRequest, async (req, res, next) => {
+// POST /send
+router.post('/send', authenticateToken, validateChatRequest, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
+      res.status(400).json({ 
+        success: false, 
         error: 'Validation failed',
         details: errors.array()
       });
+      return;
     }
 
-    const { message, sessionId, stream = false } = req.body;
+    const { sessionId, message, stream = false } = req.body;
+    if (!message) {
+      res.status(400).json({ success: false, error: 'message là bắt buộc' });
+      return;
+    }
+
     const userId = (req as any).user.id;
 
     // Create or get session
@@ -95,7 +101,8 @@ router.post('/send', authenticateToken, validateChatRequest, async (req, res, ne
                   'UPDATE messages SET content = ? WHERE id = ?',
                   [assistantContent, assistantMessageId]
                 );
-                return res.end();
+                res.end();
+                return;
               }
 
               try {
@@ -119,12 +126,14 @@ router.post('/send', authenticateToken, validateChatRequest, async (req, res, ne
         );
 
         res.end();
-      } catch (error) {
-        console.error('Streaming error:', error);
+        return;
+      } catch (streamError) {
+        console.error('Streaming error:', streamError);
         res.status(500).json({
           success: false,
           error: 'Streaming failed'
         });
+        return;
       }
     } else {
       // Handle regular response
@@ -144,22 +153,24 @@ router.post('/send', authenticateToken, validateChatRequest, async (req, res, ne
         [currentSessionId]
       );
 
-      res.json({
-        success: true,
+      res.status(201).json({ 
+        success: true, 
         data: {
           message: assistantMessage,
           sessionId: currentSessionId,
           usage: response.usage
         }
       });
+      return;
     }
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
+    return;
   }
 });
 
-// Get messages for a session
-router.get('/messages/:sessionId', authenticateToken, async (req, res, next) => {
+// GET /messages/:sessionId
+router.get('/messages/:sessionId', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { sessionId } = req.params;
     const userId = (req as any).user.id;
@@ -171,10 +182,11 @@ router.get('/messages/:sessionId', authenticateToken, async (req, res, next) => 
     );
 
     if (!session) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Session not found'
       });
+      return;
     }
 
     const messages = await allQuery(
@@ -186,13 +198,15 @@ router.get('/messages/:sessionId', authenticateToken, async (req, res, next) => 
       success: true,
       data: messages
     });
-  } catch (error) {
-    next(error);
+    return;
+  } catch (err) {
+    next(err);
+    return;
   }
 });
 
-// Delete a message
-router.delete('/messages/:messageId', authenticateToken, async (req, res, next) => {
+// DELETE /messages/:messageId
+router.delete('/messages/:messageId', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { messageId } = req.params;
     const userId = (req as any).user.id;
@@ -206,20 +220,20 @@ router.delete('/messages/:messageId', authenticateToken, async (req, res, next) 
     );
 
     if (!message) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Message not found'
       });
+      return;
     }
 
     await runQuery('DELETE FROM messages WHERE id = ?', [messageId]);
 
-    res.json({
-      success: true,
-      message: 'Message deleted successfully'
-    });
-  } catch (error) {
-    next(error);
+    res.status(204).end();
+    return;
+  } catch (err) {
+    next(err);
+    return;
   }
 });
 

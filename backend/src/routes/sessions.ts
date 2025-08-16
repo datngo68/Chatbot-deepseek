@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
 import { v4 as uuidv4 } from 'uuid';
 import { runQuery, getQuery, allQuery } from '../config/database';
@@ -6,8 +6,8 @@ import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
-// Get all sessions for user
-router.get('/', authenticateToken, async (req, res, next) => {
+// GET /
+router.get('/', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).user.id;
 
@@ -23,13 +23,15 @@ router.get('/', authenticateToken, async (req, res, next) => {
       success: true,
       data: sessions
     });
+    return;
   } catch (error) {
     next(error);
+    return;
   }
 });
 
-// Get single session
-router.get('/:sessionId', authenticateToken, async (req, res, next) => {
+// GET /:sessionId
+router.get('/:sessionId', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { sessionId } = req.params;
     const userId = (req as any).user.id;
@@ -42,33 +44,37 @@ router.get('/:sessionId', authenticateToken, async (req, res, next) => {
     );
 
     if (!session) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Session not found'
       });
+      return;
     }
 
     res.json({
       success: true,
       data: session
     });
+    return;
   } catch (error) {
     next(error);
+    return;
   }
 });
 
-// Create new session
+// POST /
 router.post('/', authenticateToken, [
   body('title').isString().trim().isLength({ min: 1, max: 100 })
-], async (req, res, next) => {
+], async (req: Request, res: Response, next: NextFunction) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Validation failed',
         details: errors.array()
       });
+      return;
     }
 
     const { title } = req.body;
@@ -89,23 +95,26 @@ router.post('/', authenticateToken, [
       success: true,
       data: session
     });
+    return;
   } catch (error) {
     next(error);
+    return;
   }
 });
 
-// Update session title
+// PUT /:sessionId
 router.put('/:sessionId', authenticateToken, [
   body('title').isString().trim().isLength({ min: 1, max: 100 })
-], async (req, res, next) => {
+], async (req: Request, res: Response, next: NextFunction) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Validation failed',
         details: errors.array()
       });
+      return;
     }
 
     const { sessionId } = req.params;
@@ -119,10 +128,11 @@ router.put('/:sessionId', authenticateToken, [
     );
 
     if (!session) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Session not found'
       });
+      return;
     }
 
     await runQuery(
@@ -139,13 +149,15 @@ router.put('/:sessionId', authenticateToken, [
       success: true,
       data: updatedSession
     });
+    return;
   } catch (error) {
     next(error);
+    return;
   }
 });
 
-// Delete session
-router.delete('/:sessionId', authenticateToken, async (req, res, next) => {
+// DELETE /:sessionId
+router.delete('/:sessionId', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { sessionId } = req.params;
     const userId = (req as any).user.id;
@@ -157,10 +169,11 @@ router.delete('/:sessionId', authenticateToken, async (req, res, next) => {
     );
 
     if (!session) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Session not found'
       });
+      return;
     }
 
     // Delete session (messages will be deleted due to CASCADE)
@@ -170,13 +183,15 @@ router.delete('/:sessionId', authenticateToken, async (req, res, next) => {
       success: true,
       message: 'Session deleted successfully'
     });
+    return;
   } catch (error) {
     next(error);
+    return;
   }
 });
 
-// Clear all messages in a session without deleting the session
-router.delete('/:sessionId/messages', authenticateToken, async (req, res, next) => {
+// DELETE /:sessionId/messages
+router.delete('/:sessionId/messages', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { sessionId } = req.params;
     const userId = (req as any).user.id;
@@ -188,10 +203,11 @@ router.delete('/:sessionId/messages', authenticateToken, async (req, res, next) 
     );
 
     if (!session) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Session not found'
       });
+      return;
     }
 
     // Delete all messages for the session
@@ -208,13 +224,15 @@ router.delete('/:sessionId/messages', authenticateToken, async (req, res, next) 
       message: 'Session messages cleared successfully',
       deleted: result.changes
     });
+    return;
   } catch (error) {
     next(error);
+    return;
   }
 });
 
-// Export session as JSON
-router.get('/:sessionId/export', authenticateToken, async (req, res, next) => {
+// GET /:sessionId/export
+router.get('/:sessionId/export', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { sessionId } = req.params;
     const userId = (req as any).user.id;
@@ -226,10 +244,11 @@ router.get('/:sessionId/export', authenticateToken, async (req, res, next) => {
     );
 
     if (!session) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Session not found'
       });
+      return;
     }
 
     // Get all messages for the session
@@ -255,13 +274,15 @@ router.get('/:sessionId/export', authenticateToken, async (req, res, next) => {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', `attachment; filename="chat-${sessionId}.json"`);
     res.json(exportData);
+    return;
   } catch (error) {
     next(error);
+    return;
   }
 });
 
-// Search sessions
-router.get('/search/:query', authenticateToken, async (req, res, next) => {
+// GET /search/:query
+router.get('/search/:query', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { query } = req.params;
     const userId = (req as any).user.id;
@@ -280,8 +301,10 @@ router.get('/search/:query', authenticateToken, async (req, res, next) => {
       success: true,
       data: sessions
     });
+    return;
   } catch (error) {
     next(error);
+    return;
   }
 });
 
