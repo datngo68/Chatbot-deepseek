@@ -27,7 +27,7 @@ router.post('/send', authenticateToken, validateChatRequest, async (req: Request
       return;
     }
 
-    const { sessionId, message, stream = false } = req.body;
+    const { sessionId, message, stream = false, documentIds = [] } = req.body;
     if (!message) {
       res.status(400).json({ success: false, error: 'message là bắt buộc' });
       return;
@@ -61,10 +61,27 @@ router.post('/send', authenticateToken, validateChatRequest, async (req: Request
     );
 
     // Prepare messages for DeepSeek API
-    const deepSeekMessages = messages.map(msg => ({
+    let deepSeekMessages = messages.map(msg => ({
       role: msg.role,
       content: msg.content
     }));
+
+    // Add knowledge base context if documents are selected
+    if (documentIds && documentIds.length > 0) {
+      try {
+        const knowledgeContext = await buildKnowledgeContext(documentIds, userId);
+        if (knowledgeContext) {
+          // Add system message with knowledge context
+          deepSeekMessages.unshift({
+            role: 'system',
+            content: `Bạn có thể tham khảo thông tin sau để trả lời câu hỏi: ${knowledgeContext}`
+          });
+        }
+      } catch (error) {
+        console.error('Error building knowledge context:', error);
+        // Continue without knowledge context if there's an error
+      }
+    }
 
     if (stream) {
       // Handle streaming response
@@ -81,13 +98,9 @@ router.post('/send', authenticateToken, validateChatRequest, async (req: Request
         const assistantMessageId = uuidv4();
         let assistantContent = '';
 
-        let reading = true;
-        while (reading) {
+        while (true) {
           const { done, value } = await reader.read();
-          if (done) {
-            reading = false;
-            break;
-          }
+          if (done) break;
 
           const chunk = decoder.decode(value);
           const lines = chunk.split('\n');
@@ -96,10 +109,10 @@ router.post('/send', authenticateToken, validateChatRequest, async (req: Request
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
               if (data === '[DONE]') {
-                // Update the message with final content
+                // Lưu message hoàn chỉnh
                 await runQuery(
-                  'UPDATE messages SET content = ? WHERE id = ?',
-                  [assistantContent, assistantMessageId]
+                  'INSERT INTO messages (id, session_id, content, role) VALUES (?, ?, ?, ?)',
+                  [assistantMessageId, currentSessionId, assistantContent, 'assistant']
                 );
                 res.end();
                 return;
@@ -110,6 +123,7 @@ router.post('/send', authenticateToken, validateChatRequest, async (req: Request
                 if (parsed.choices?.[0]?.delta?.content) {
                   const content = parsed.choices[0].delta.content;
                   assistantContent += content;
+                  // Gửi từng chunk về frontend
                   res.write(`data: ${JSON.stringify({ content })}\n\n`);
                 }
               } catch (e) {
@@ -119,12 +133,12 @@ router.post('/send', authenticateToken, validateChatRequest, async (req: Request
           }
         }
 
-        // Save assistant message
+        // Save assistant message if stream ends without [DONE]
         await runQuery(
           'INSERT INTO messages (id, session_id, content, role) VALUES (?, ?, ?, ?)',
           [assistantMessageId, currentSessionId, assistantContent, 'assistant']
         );
-
+        
         res.end();
         return;
       } catch (streamError) {
@@ -158,7 +172,8 @@ router.post('/send', authenticateToken, validateChatRequest, async (req: Request
         data: {
           message: assistantMessage,
           sessionId: currentSessionId,
-          usage: response.usage
+          usage: response.usage,
+          knowledgeUsed: documentIds && documentIds.length > 0
         }
       });
       return;
@@ -236,5 +251,30 @@ router.delete('/messages/:messageId', authenticateToken, async (req: Request, re
     return;
   }
 });
+
+// Helper function to build knowledge context
+async function buildKnowledgeContext(documentIds: string[], userId: string): Promise<string | null> {
+  try {
+    if (!documentIds || documentIds.length === 0) return null;
+
+    const placeholders = documentIds.map(() => '?').join(',');
+    const documents = await allQuery(
+      `SELECT title, description, tags FROM knowledge_documents 
+       WHERE id IN (${placeholders}) AND user_id = ?`,
+      [...documentIds, userId]
+    );
+
+    if (documents.length === 0) return null;
+
+    const context = documents.map(doc => 
+      `Tài liệu "${doc.title}": ${doc.description || 'Không có mô tả'}. Tags: ${doc.tags || 'Không có tags'}`
+    ).join('\n');
+
+    return context;
+  } catch (error) {
+    console.error('Error building knowledge context:', error);
+    return null;
+  }
+}
 
 export { router as chatRoutes };

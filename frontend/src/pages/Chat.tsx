@@ -11,6 +11,8 @@ import MessageComponent from '@/components/MessageComponent'
 export default function Chat() {
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
   const {
@@ -193,15 +195,23 @@ export default function Chat() {
             </p>
           </div>
         ) : (
-          messages.map((message) => (
-            <MessageComponent key={message.id} message={message} />
+          messages.map((msg) => (
+            <MessageComponent key={msg.id} message={msg} />
           ))
         )}
         
-        {isLoading && (
-          <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
-            <Loader2 className="animate-spin" size={20} />
-            <span>AI đang suy nghĩ...</span>
+        {/* Hiển thị streaming message */}
+        {isStreaming && streamingMessage && (
+          <div className="flex justify-start mb-4">
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 max-w-[80%]">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                Assistant đang trả lời...
+              </div>
+              <div className="text-gray-900 dark:text-gray-100">
+                {streamingMessage}
+                <span className="animate-pulse">|</span>
+              </div>
+            </div>
           </div>
         )}
         

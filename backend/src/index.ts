@@ -23,6 +23,7 @@ import { authRoutes } from './routes/auth';
 import { chatRoutes } from './routes/chat';
 import { sessionRoutes } from './routes/sessions';
 import { initializeDatabase } from './config/database';
+import { knowledgeRoutes } from './routes/knowledge';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -61,6 +62,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/knowledge', knowledgeRoutes); // Thêm dòng này
 
 // Error handling middleware
 app.use(notFound);
